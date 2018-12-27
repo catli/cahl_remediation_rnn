@@ -1,0 +1,1 @@
+The goal of this project is to create an algorithm that can predict and student learning pathway. When students are stuck on an exercise and a skillset, what content would most likely help them unstuck. The exercise, video and hint consumption data will be trained using  RNN models (GRU or LSTM), with validation on predicting unstuckness.
