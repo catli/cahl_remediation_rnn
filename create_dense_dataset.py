@@ -212,7 +212,7 @@ class TokenizeData():
         response = row[8]
         return(('exercise',content_name, response))
 
-    def list_videos_watched_before(self, session, exercise_start_time:
+    def list_videos_watched_before(self, session, exercise_start_time):
         '''
            Create a list of videos watched before exercise start time
         '''
