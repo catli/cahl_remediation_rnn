@@ -192,7 +192,7 @@ class TokenizeData():
             self.session_data.append([row_token])
         # [TODO] TRANSFORM THE NUMBER OF HINTS! TAKEN TO CONDENSE
    
-   def create_index(self, row):
+    def create_index(self, row):
         '''
             the index for each entry is based on individual sessions 
             and unique id for session combines sha_id and session_start_time
