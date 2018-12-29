@@ -41,9 +41,6 @@ class CreateLearningList():
         self.last_problem = 'exercise|problem_type'
         self.user_attempts = {}
         self.user_data = {'stuck':{},'unstuck':{}, 'never_stuck':[] }
-        self.csvwriter = csv.writer(self.writefile, delimiter = ',') 
-        self.write_header()
-        next(self.reader)
         # first_line = self.reader.readline()
         counter = 1
         for line in self.reader:
