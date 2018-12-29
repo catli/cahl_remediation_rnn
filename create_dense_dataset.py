@@ -46,24 +46,23 @@ class CreateLearningList():
         # first_line = self.reader.readline()
         counter = 1
         for line in self.reader:
-            self.parse_line(line, sessions)
-            counter+=1
-            if counter % 1000000 == 0:
-                print(counter)
+            line_delimited = line.split(',')
+            session_id = create_session_id( line_delimited[0], 
+                    line_delimited[2])
+            # if sha_id already in learning list, then skip
+            if session_id in self.learning_list:
+                continue
+            else:
+                self.parse_line(line_delimited, sessions)
+                counter+=1
+                if counter % 1000000 == 0:
+                    print(counter)
 
-    def parse_line(self, line, sessions=False):
+    def parse_line(self, line_delimited, session_id):
         '''
            Parse through each line and store the values 
         '''
-        line_delimited = line.split(',')
-        # if sessions = True, then id by session
-        if sessions:
-            sha_id = line_delimited[0]+line_delimited[2]
-        else:
-            sha_id = line_delimited[0]
-        # if sha_id already in learning list, then skip
-        if sha_id in self.learning_list:
-            continue
+        sha_id = line_delimited[0]
         exercise = line_delimited[5]
         problem_type = line_delimited[7]
         correct = line_delimited[8] == 'true'
@@ -91,18 +90,18 @@ class CreateLearningList():
         else:
             self.user_attempts[problem]['incorrect']+= max(attempt_numbers-1,1)
              
-    def add_new_data_for_user(self, problem_type, exercise):
+    def add_new_data_for_user(self, problem_type, exercise, session_id):
         problem = exercise + '|' + problem_type 
         if self.user_attempts[problem]['correct']>=2 and problem in self.user_data['stuck']:
-            # If got a problem right twice (which they were previously stuck on
-            # then move the problem to the stuck list
+            # If got a problem right twice (which they were previously stuck
+            # on)  then move the problem to the unstuck list
             self.user_data['unstuck'].append(problem)
-            # if unstuck, then add to list of unstuck sha_ids
-            self.learning_list.append(sha_id)
+            self.learning_list.append(session_id)
         elif self.user_attempts[problem]['correct']>=2 and \
             problem not in self.user_data['stuck']:
             self.user_data['never_stuck'].append(problem)
-        elif self.user_attempts[problem]['incorrect']>=2 and problem not in self.user_data['stuck']:
+        elif self.user_attempts[problem]['incorrect']>=2 and \
+            problem not in self.user_data['stuck']:
             self.user_data['stuck'].append(problem)
 
 
