@@ -257,9 +257,11 @@ def generate_token_files(affix):
         Estimated time: 5 seconds for 1M row
     '''
     # create file names
-    exercise_filename = 'sorted_data/khan_data_'+affix+'.csv'
+    exercise_filename = os.path.expanduser(
+        '~/sorted_data/khan_data_'+affix+'.csv')
     # [TODO]: UPDATE VIDEO! FILENAME
-    video_filename = 'sorted_data/khan_video_data_'+affix+'.csv'
+    video_filename = os.path.expanduser(
+        '~/sorted_data/khan_video_data_'+affix+'.csv')
     # Create the list of sessions where learning occurred 
     learning_list = CreateLearningList(read_filename = exercise_filename).learning_list
     pdb.set_trace()
