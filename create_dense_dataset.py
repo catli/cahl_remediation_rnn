@@ -126,8 +126,8 @@ class TokenizeData():
     # ...]}
     def store_video_data(self, video_filename): 
         self.video_data = {}
-        with reader as open(video_filename, 'r'):
-            for line in reader:
+        with open(video_filename, 'r') as video_reader:
+            for line in video_reader:
                 row = line.split(",")
                 # session concatenates sha_id and session start time
                 sha_id = row[0] 
