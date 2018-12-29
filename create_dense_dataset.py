@@ -116,7 +116,7 @@ class TokenizeData():
     '''
     def __init__(self, exercise_filename, video_filename, learning_list):
         self.store_video_data(video_filename)
-        self.session_data = [['NULL']
+        self.session_data = [['NULL']]
         self.session_index = [['NULL']]
         print('initialize '+ exercise_filename)
         self.exercise_reader = open(exercise_filename,'r')
