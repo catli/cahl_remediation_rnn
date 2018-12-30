@@ -1,6 +1,7 @@
 import os
 import time 
 import csv
+import numpy as np
 import pdb
 
 ############################################
@@ -19,7 +20,7 @@ import pdb
 def create_session_id(sha_id, session_start):
     ''' concat the learner id with the session start time to get unique
     session id'''
-    return sha_id + '|' + session_start
+    return str(sha_id) + '|' + str(session_start)
 
 class CreateLearningList():
 
@@ -38,10 +39,10 @@ class CreateLearningList():
             not sure how to efficiently do this and maintain the sort order 
         '''
         self.last_sha_id = 'sha_id'
-        self.last_problem = 'exercise|problem_type'
+        self.last_session_id = 'session_id'
         self.user_attempts = {}
-        self.user_data = {'stuck':{},'unstuck':{}, 'never_stuck':[] }
-        # first_line = self.reader.readline()
+        self.user_data = {'stuck':[], 'never_stuck':[] }
+        first_line = self.reader.readline()
         counter = 1
         for line in self.reader:
             line_delimited = line.split(',')
@@ -51,7 +52,7 @@ class CreateLearningList():
             if session_id in self.learning_list:
                 continue
             else:
-                self.parse_line(line_delimited, sessions)
+                self.parse_line(line_delimited, session_id)
                 counter+=1
                 if counter % 1000000 == 0:
                     print(counter)
@@ -66,16 +67,13 @@ class CreateLearningList():
         correct = line_delimited[8] == 'true'
         attempt_numbers = int(line_delimited[12])
         problem = exercise + '|' +  problem_type
-        if sha_id != self.last_sha_id:
-            self.summarize_old_sha_id(prerequisites)
-            self.last_sha_id = sha_id
-            self.last_problem = problem
+        if session_id != self.last_session_id:
+            self.last_session_id = session_id
             self.user_attempts = {}
             self.update_attempts(correct, attempt_numbers, problem) 
         else:
             self.update_attempts(correct, attempt_numbers, problem)  
-            self.add_new_data_for_user(problem_type, exercise)
-            self.last_problem = problem
+            self.add_new_data_for_user(problem, session_id)
  
 
     def update_attempts(self, correct, attempt_numbers, problem):
@@ -88,17 +86,15 @@ class CreateLearningList():
         else:
             self.user_attempts[problem]['incorrect']+= max(attempt_numbers-1,1)
              
-    def add_new_data_for_user(self, problem_type, exercise, session_id):
-        problem = exercise + '|' + problem_type 
+    def add_new_data_for_user(self, problem, session_id):
         if self.user_attempts[problem]['correct']>=2 and problem in self.user_data['stuck']:
             # If got a problem right twice (which they were previously stuck
             # on)  then move the problem to the unstuck list
-            self.user_data['unstuck'].append(problem)
             self.learning_list.append(session_id)
         elif self.user_attempts[problem]['correct']>=2 and \
             problem not in self.user_data['stuck']:
             self.user_data['never_stuck'].append(problem)
-        elif self.user_attempts[problem]['incorrect']>=2 and \
+        elif self.user_attempts[problem]['incorrect']>=3 and \
             problem not in self.user_data['stuck']:
             self.user_data['stuck'].append(problem)
 
@@ -244,6 +240,13 @@ def write_file(file_name, data_array):
         csvwriter = csv.writer(open_file, delimiter = ' ')
         csvwriter.writerows(data_array)
 
+def write_vector_file(path, file_name, vectors):
+    path = os.path.expanduser(path+file_name+'.out')
+    print(path)
+    np.savetxt(path, vectors, delimiter = ',')
+
+
+
 
 # [TODO] RENAME ALL FILES FROM TOKENIZE
 def generate_token_files(affix):
@@ -260,7 +263,10 @@ def generate_token_files(affix):
     video_filename = os.path.expanduser(
         '~/sorted_data/khan_video_data_'+affix+'.csv')
     # Create the list of sessions where learning occurred 
-    learning_list = CreateLearningList(read_filename = exercise_filename).learning_list
+    learning_list_instance = CreateLearningList(read_filename = exercise_filename).learning_list
+    write_vector_file(path = '~/cahl_rnn_output/', 
+            file_name = 'learnig_list',
+            vectors = learning_list_instance)
     pdb.set_trace()
     #write_data_filename = 'tokenize_data_'+affix
     #write_index_filename = 'tokenize_index_'+affix
