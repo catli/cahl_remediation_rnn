@@ -98,7 +98,7 @@ class CreateLearningList():
             problem not in self.user_data['stuck']:
             self.user_data['stuck'].append(problem)
 
-
+# [TODO] Add testing for learning list function
 
 
 class TokenizeData():
@@ -240,6 +240,7 @@ def write_file(file_name, data_array):
         csvwriter = csv.writer(open_file, delimiter = ' ')
         csvwriter.writerows(data_array)
 
+# [TODO] bundle write vector code into util file
 def write_vector_file(path, file_name, vectors):
     path = os.path.expanduser(path+file_name+'.out')
     print(path)
