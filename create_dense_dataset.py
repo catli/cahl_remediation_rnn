@@ -24,24 +24,22 @@ def create_session_id(sha_id, session_start):
 
 class CreateLearningList():
 
-    def __init__(self, read_filename):
+    def __init__(self, read_filename = ''):
         print('initialize '+ read_filename)
-        self.reader = open(read_filename,'r')
+        if read_filename!='':
+            self.reader = open(read_filename,'r')
+        self.last_sha_id = 'sha_id'
+        self.last_session_id = 'session_id'
+        self.user_attempts = {}
         self.learning_list = [] 
-        self.iterate_through_lines(sessions = True)
-        #[TODO]: WRITE LEARNING LIST  
 
-    def iterate_through_lines(self, sessions = False):
+    def iterate_through_lines(self):
         '''
             read file and write the lines
             does not use readlines so there's less strain on memory
             it would be great helpful to parallelize this function but
             not sure how to efficiently do this and maintain the sort order 
         '''
-        self.last_sha_id = 'sha_id'
-        self.last_session_id = 'session_id'
-        self.user_attempts = {}
-        self.user_data = {'stuck':[], 'never_stuck':[] }
         first_line = self.reader.readline()
         counter = 1
         for line in self.reader:
@@ -70,13 +68,12 @@ class CreateLearningList():
         if session_id != self.last_session_id:
             self.last_session_id = session_id
             self.user_attempts = {}
-            self.update_attempts(correct, attempt_numbers, problem) 
+            self.update_attempts(correct, attempt_numbers, problem, session_id) 
         else:
-            self.update_attempts(correct, attempt_numbers, problem)  
-            self.add_new_data_for_user(problem, session_id)
+            self.update_attempts(correct, attempt_numbers, problem, session_id)  
  
 
-    def update_attempts(self, correct, attempt_numbers, problem):
+    def update_attempts(self, correct, attempt_numbers, problem, session_id):
         if problem not in self.user_attempts:
             self.user_attempts[problem] = {}
             self.user_attempts[problem]['correct'] = 0
@@ -85,20 +82,47 @@ class CreateLearningList():
             self.user_attempts[problem]['correct']+=1
         else:
             self.user_attempts[problem]['incorrect']+= max(attempt_numbers-1,1)
-             
-    def add_new_data_for_user(self, problem, session_id):
-        if self.user_attempts[problem]['correct']>=2 and problem in self.user_data['stuck']:
-            # If got a problem right twice (which they were previously stuck
-            # on)  then move the problem to the unstuck list
+        if correct and self.user_attempts[problem]['correct']>=2 and \
+            self.user_attempts[problem]['incorrect']>=2:
             self.learning_list.append(session_id)
-        elif self.user_attempts[problem]['correct']>=2 and \
-            problem not in self.user_data['stuck']:
-            self.user_data['never_stuck'].append(problem)
-        elif self.user_attempts[problem]['incorrect']>=3 and \
-            problem not in self.user_data['stuck']:
-            self.user_data['stuck'].append(problem)
+
+    def test_learning_list(self):
+        '''
+            read file and write the lines
+            does not use readlines so there's less strain on memory
+            it would be great helpful to parallelize this function but
+            not sure how to efficiently do this and maintain the sort order 
+        '''
+        test_data = [
+                # learner gets stuck and then unstuck
+                'learner1,,2018-01-01,,,ex1,,p1,false,,,,3,1',
+                'learner1,,2018-01-01,,,ex1,,p2,true,,,,1,1',
+                'learner1,,2018-01-01,,,ex1,,p1,true,,,,1,1',
+                'learner1,,2018-01-01,,,ex1,,p1,true,,,,1,1',
+                'learner1,,2018-01-01,,,ex2,,p2,false,,,,2,1',
+                # learner never get stuck
+                'learner1,,2018-02-01,,,ex1,,p1,true,,,,1,1',
+                'learner1,,2018-02-01,,,ex1,,p1,true,,,,1,1',
+                'learner1,,2018-02-01,,,ex1,,p1,false,,,,3,1']
+        for line in test_data:
+            line_delimited = line.split(',')
+            session_id = create_session_id( line_delimited[0], 
+                    line_delimited[2])
+            # if sha_id already in learning list, then skip
+            if session_id in self.learning_list:
+                continue
+            else:
+                self.parse_line(line_delimited, session_id)
+        # expect self.learning_list to equal to ['learn1|2018-01-01']
+        assert self.learning_list == [create_session_id('learner1','2018-01-01')]
+        print('PASS TEST')
+
 
 # [TODO] Add testing for learning list function
+# (1) Add a case where a learner gets stuck and then unstuck, then another
+# wrong problem
+# (2) Add a case where a learner is never stuck, but gets something wrong at
+# the end
 
 
 class TokenizeData():
@@ -265,6 +289,7 @@ def generate_token_files(affix):
         '~/sorted_data/khan_video_data_'+affix+'.csv')
     # Create the list of sessions where learning occurred 
     learning_list_instance = CreateLearningList(read_filename = exercise_filename).learning_list
+    learning_list_instance.iterate_through_lines()
     write_vector_file(path = '~/cahl_rnn_output/', 
             file_name = 'learnig_list',
             vectors = learning_list_instance)
@@ -278,14 +303,18 @@ def generate_token_files(affix):
     #write_file(write_data_filename, token.session_data)
     #write_file(write_index_filename, token.session_index)
     
-     
-affix = 'sorted'
 
-start = time.time() 
-generate_token_files(affix)
-end =time.time()
-print(end-start)
+def main():
+    affix = 'sorted'
+    start = time.time() 
+    generate_token_files(affix)
+    end =time.time()
+    print(end-start)
+   
 
+if  __name__ == '__main__':
+    main() 
+   
 # Without logic for out of sort 
 # tiny: 0.007
 # small: 3.850081443786621 
