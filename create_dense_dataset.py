@@ -293,7 +293,7 @@ def generate_token_files(affix):
     #write_vector_file(path = '~/cahl_rnn_output/', 
     #        file_name = 'learnig_list',
     #        vectors = learning_list_instance.learning_list)
-    # pdb.set_trace()
+    pdb.set_trace()
     #write_data_filename = 'tokenize_data_'+affix
     #write_index_filename = 'tokenize_index_'+affix
     ## generate token data
@@ -305,7 +305,7 @@ def generate_token_files(affix):
     
 
 def main():
-    affix ='small' # 'sorted'
+    affix = 'sorted'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
