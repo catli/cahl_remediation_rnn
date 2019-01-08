@@ -278,8 +278,7 @@ def write_set(path, file_name, writing_set):
     open_file = open(full_path, "w")
     with open(full_path, "w") as open_file:
         for set_item in writing_set: 
-            open_file.write(set_item)
-
+            open_file.write(set_item + '\n')
 
  
 
