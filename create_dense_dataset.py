@@ -305,9 +305,9 @@ def generate_token_files(affix):
     # Create the list of sessions where learning occurred 
     learning_list_instance = CreateLearningList(read_filename = exercise_filename)
     learning_list_instance.iterate_through_lines()
-    #write_vector_file(path = '~/cahl_rnn_output/', 
-    #        file_name = 'learnig_list',
-    #        vectors = learning_list_instance.learning_list)
+    write_set(path = '~/cahl_rnn_output/', 
+            file_name = 'learning_list',
+            writing_set = learning_list_instance.learning_list)
     pdb.set_trace()
     #write_data_filename = 'tokenize_data_'+affix
     #write_index_filename = 'tokenize_index_'+affix
