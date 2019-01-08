@@ -65,12 +65,16 @@ class CreateLearningList():
         correct = line_delimited[8] == 'true'
         attempt_numbers = int(line_delimited[12])
         problem = exercise + '|' +  problem_type
+        # [TODO] delete after testing
+        print(line_delimited)
         if session_id != self.last_session_id:
             self.last_session_id = session_id
             self.user_attempts = {}
             self.update_attempts(correct, attempt_numbers, problem, session_id) 
         else:
             self.update_attempts(correct, attempt_numbers, problem, session_id)  
+        # [TODO] delete after testing
+        print(self.user_attempts)
  
 
     def update_attempts(self, correct, attempt_numbers, problem, session_id):
@@ -306,7 +310,7 @@ def generate_token_files(affix):
     
 
 def main():
-    affix = 'sorted'
+    affix = 'sample'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
