@@ -65,16 +65,12 @@ class CreateLearningList():
         correct = line_delimited[8] == 'true'
         attempt_numbers = int(line_delimited[12])
         problem = exercise + '|' +  problem_type
-        # [TODO] delete after testing
-        print(line_delimited)
         if session_id != self.last_session_id:
             self.last_session_id = session_id
             self.user_attempts = {}
             self.update_attempts(correct, attempt_numbers, problem, session_id) 
         else:
             self.update_attempts(correct, attempt_numbers, problem, session_id)  
-        # [TODO] delete after testing
-        print(self.user_attempts)
  
 
     def update_attempts(self, correct, attempt_numbers, problem, session_id):
@@ -277,7 +273,7 @@ def write_vector_file(path, file_name, vectors):
     np.savetxt(path, vectors, delimiter = ',')
 
 def write_set(path, file_name, writing_set):
-    full_path = path +file_name+'.csv'
+    full_path = os.path.expanduser(path +file_name+'.csv')
     print(full_path)
     open_file = open(full_path, "w")
     with open(full_path, "w") as open_file:
@@ -324,7 +320,7 @@ def generate_token_files(affix):
     
 
 def main():
-    affix = 'sample'
+    affix = 'sorted'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
