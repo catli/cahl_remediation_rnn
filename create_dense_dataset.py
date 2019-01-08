@@ -99,7 +99,8 @@ class CreateLearningList():
         '''
         test_data = [
                 # learner gets stuck and then unstuck
-                'learner1,,2018-01-01,,,ex1,,p1,false,,,,3,1',
+                'learner1,,2018-01-01,,,ex1,,p1,false,,,,2,1',
+                'learner1,,2018-01-01,,,ex1,,p1,false,,,,2,1',
                 'learner1,,2018-01-01,,,ex1,,p2,true,,,,1,1',
                 'learner1,,2018-01-01,,,ex1,,p1,true,,,,1,1',
                 'learner1,,2018-01-01,,,ex1,,p1,true,,,,1,1',
@@ -150,7 +151,7 @@ class TokenizeData():
         self.video_data = {}
         with open(video_filename, 'r') as video_reader:
             for line in video_reader:
-                row = line.split(",")
+                row = line.split(',')
                 # session concatenates sha_id and session start time
                 sha_id = row[0] 
                 session_start = row[1] 
@@ -275,7 +276,20 @@ def write_vector_file(path, file_name, vectors):
     print(path)
     np.savetxt(path, vectors, delimiter = ',')
 
+def write_set(path, file_name, writing_set):
+    full_path = path +file_name+'.csv'
+    print(full_path)
+    open_file = open(full_path, "w")
+    with open(full_path, "w") as open_file:
+        for set_item in writing_set: 
+            open_file.write(set_item + '\n')
 
+ 
+
+def create_learning_list(affix):
+    '''
+        Create  
+    '''
 
 
 # [TODO] RENAME ALL FILES FROM TOKENIZE
@@ -295,9 +309,9 @@ def generate_token_files(affix):
     # Create the list of sessions where learning occurred 
     learning_list_instance = CreateLearningList(read_filename = exercise_filename)
     learning_list_instance.iterate_through_lines()
-    #write_vector_file(path = '~/cahl_rnn_output/', 
-    #        file_name = 'learnig_list',
-    #        vectors = learning_list_instance.learning_list)
+    write_set(path = '~/cahl_rnn_output/', 
+            file_name = 'learning_list',
+            writing_set = learning_list_instance.learning_list)
     pdb.set_trace()
     #write_data_filename = 'tokenize_data_'+affix
     #write_index_filename = 'tokenize_index_'+affix
