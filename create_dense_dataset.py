@@ -31,7 +31,7 @@ class CreateLearningList():
         self.last_sha_id = 'sha_id'
         self.last_session_id = 'session_id'
         self.user_attempts = {}
-        self.learning_list = [] 
+        self.learning_list = set() 
 
     def iterate_through_lines(self):
         '''
@@ -84,7 +84,7 @@ class CreateLearningList():
             self.user_attempts[problem]['incorrect']+= max(attempt_numbers-1,1)
         if correct and self.user_attempts[problem]['correct']>=2 and \
             self.user_attempts[problem]['incorrect']>=2:
-            self.learning_list.append(session_id)
+            self.learning_list.add(session_id)
 
     def test_learning_list(self):
         '''
@@ -104,6 +104,8 @@ class CreateLearningList():
                 'learner1,,2018-02-01,,,ex1,,p1,true,,,,1,1',
                 'learner1,,2018-02-01,,,ex1,,p1,true,,,,1,1',
                 'learner1,,2018-02-01,,,ex1,,p1,false,,,,3,1']
+        start = time.time() 
+    
         for line in test_data:
             line_delimited = line.split(',')
             session_id = create_session_id( line_delimited[0], 
@@ -114,15 +116,14 @@ class CreateLearningList():
             else:
                 self.parse_line(line_delimited, session_id)
         # expect self.learning_list to equal to ['learn1|2018-01-01']
-        assert self.learning_list == [create_session_id('learner1','2018-01-01')]
-        print('PASS TEST')
+        assert self.learning_list == set([
+                create_session_id('learner1','2018-01-01')])
+        print('PASS TEST IN ')
+        end =time.time()
+        print(end-start)
+   
 
 
-# [TODO] Add testing for learning list function
-# (1) Add a case where a learner gets stuck and then unstuck, then another
-# wrong problem
-# (2) Add a case where a learner is never stuck, but gets something wrong at
-# the end
 
 
 class TokenizeData():
