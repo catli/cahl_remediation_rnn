@@ -127,7 +127,7 @@ class CreateLearningList():
 
 
 
-class TokenizeData():
+class CondenseLearningData():
     '''
         create the dense data representing activity per session
         for learner. Working on exercises, watching a video and taking hints
@@ -135,6 +135,8 @@ class TokenizeData():
     '''
     def __init__(self, exercise_filename, video_filename, learning_list):
         self.store_video_data(video_filename)
+        # [TODO] Delete after testing
+        pdb.set_trace()
         self.session_data = [['NULL']]
         self.session_index = [['NULL']]
         print('initialize '+ exercise_filename)
@@ -275,18 +277,34 @@ def write_vector_file(path, file_name, vectors):
 def write_set(path, file_name, writing_set):
     full_path = os.path.expanduser(path +file_name+'.csv')
     print(full_path)
-    open_file = open(full_path, "w")
     with open(full_path, "w") as open_file:
         for set_item in writing_set: 
             open_file.write(set_item + '\n')
 
- 
+def read_set(path, file_name):
+    full_path = os.path.expanduser(path +file_name+'.csv')
+    print(full_path)
+    output_set = set()
+    with open(full_path, "r") as reader:
+        for line in reader: 
+            output_set.add(line.strip())
+    return output_set
 
 def create_learning_list(affix):
     '''
-        Create  
+        Create a list of sessions where learning occurred
+        this list will be used to filter out non-learners from sample
     '''
-
+    # create file names
+    exercise_filename = os.path.expanduser(
+        '~/sorted_data/khan_data_'+affix+'.csv')
+   # Create the list of sessions where learning occurred 
+    learning_list_instance = CreateLearningList(read_filename = exercise_filename)
+    learning_list_instance.iterate_through_lines()
+    write_set(path = '~/cahl_rnn_output/', 
+            file_name = 'learning_list',
+            writing_set = learning_list_instance.learning_list)
+ 
 
 # [TODO] RENAME ALL FILES FROM TOKENIZE
 def generate_token_files(affix):
@@ -302,17 +320,12 @@ def generate_token_files(affix):
     # [TODO]: UPDATE VIDEO! FILENAME
     video_filename = os.path.expanduser(
         '~/sorted_data/khan_video_data_'+affix+'.csv')
-    # Create the list of sessions where learning occurred 
-    learning_list_instance = CreateLearningList(read_filename = exercise_filename)
-    learning_list_instance.iterate_through_lines()
-    write_set(path = '~/cahl_rnn_output/', 
-            file_name = 'learning_list',
-            writing_set = learning_list_instance.learning_list)
-    pdb.set_trace()
+    learning_list = read_set(path = '~/cahl_rnn_output/', 
+            file_name = 'learning_list'  )
     #write_data_filename = 'tokenize_data_'+affix
     #write_index_filename = 'tokenize_index_'+affix
     ## generate token data
-    #token = TokenizeData(exercise_filename, video_filename, learning_list)
+    condense_data = CondenseLearningData(exercise_filename, video_filename, learning_list)
     #token.create_session_data()
     ## write the index and dat files
     #write_file(write_data_filename, token.session_data)
