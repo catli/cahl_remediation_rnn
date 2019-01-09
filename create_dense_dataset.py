@@ -312,8 +312,7 @@ def write_set(path, file_name, writing_set):
     print( 'writing set to %s' % full_path)
     with open(full_path, "w") as writer:
         for set_item in writing_set:
-            print(set_item)
-            writer.write(set_item + '\n')
+            writer.write(set_item[0] + '\n')
 
 def read_set(path, file_name):
     full_path = os.path.expanduser(path +file_name+'.csv')
