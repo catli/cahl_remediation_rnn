@@ -303,9 +303,9 @@ class CondenseLearningData():
 
        
 def write_vector_file(path, file_name, vectors):
-    path = os.path.expanduser(path+file_name+'.out')
-    print(path)
-    np.savetxt(path, vectors, delimiter = ',')
+    full_path = os.path.expanduser(path+file_name+'.out')
+    print(full_path)
+    np.save(full_path, vectors)
 
 def write_set(path, file_name, writing_set):
     full_path = os.path.expanduser(path +file_name+'.csv')
