@@ -310,9 +310,10 @@ def write_vector_file(path, file_name, vectors):
 def write_set(path, file_name, writing_set):
     full_path = os.path.expanduser(path +file_name+'.csv')
     print( 'writing set to %s' % full_path)
-    with open(full_path, "w") as open_file:
-        for set_item in writing_set: 
-            open_file.write(set_item + '\n')
+    with open(full_path, "w") as writer:
+        for set_item in writing_set:
+            print(set_item)
+            writer.write(set_item + '\n')
 
 def read_set(path, file_name):
     full_path = os.path.expanduser(path +file_name+'.csv')
