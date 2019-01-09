@@ -370,7 +370,7 @@ def generate_token_files(affix):
     
 
 def main():
-    affix = 'small'
+    affix = 'sorted'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
