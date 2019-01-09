@@ -309,14 +309,14 @@ def write_vector_file(path, file_name, vectors):
 
 def write_set(path, file_name, writing_set):
     full_path = os.path.expanduser(path +file_name+'.csv')
-    print 'writing set to %s' % (full_path)
+    print( 'writing set to %s' % full_path)
     with open(full_path, "w") as open_file:
         for set_item in writing_set: 
             open_file.write(set_item + '\n')
 
 def read_set(path, file_name):
     full_path = os.path.expanduser(path +file_name+'.csv')
-    print 'reading set from %s' % (full_path)
+    print('reading set from %s' % full_path)
     output_set = set()
     with open(full_path, "r") as reader:
         for line in reader: 
@@ -352,7 +352,7 @@ def generate_token_files(affix):
     exercise_filename = os.path.expanduser(
         '~/sorted_data/khan_data_'+affix+'.csv')
     video_filename = os.path.expanduser(
-        '~/sorted_data/khan_video_data_'+affix+'.csv')
+        '~/sorted_data/khan_video_data_sorted.csv')
     # create_learning_list
     learning_list = read_set(path = '~/cahl_rnn_output/', 
             file_name = 'learning_list'  )
@@ -370,7 +370,7 @@ def generate_token_files(affix):
     
 
 def main():
-    affix = 'sorted'
+    affix = 'small'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
