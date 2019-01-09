@@ -131,21 +131,45 @@ class CondenseLearningData():
     '''
         create the dense data representing activity per session
         for learner. Working on exercises, watching a video and taking hints
-        are all included in hte dense dataset 
+        are all included in the dense dataset 
     '''
-    def __init__(self, exercise_filename, video_filename, learning_list):
-        self.store_video_data(video_filename)
-        # [TODO] Delete after testing
-        pdb.set_trace()
+    def __init__(self ):
         self.session_data = [['NULL']]
         self.session_index = [['NULL']]
-        print('initialize '+ exercise_filename)
-        self.exercise_reader = open(exercise_filename,'r')
 
-    #[TODO: ADD VIDEO! FUNCTION TO READ DATA INTO DICTIONARY, i.e. 
-    # { sha_id|session_start_time: [(timestamp, video), (timestamp, video),
-    # ...]}
-    def store_video_data(self, video_filename): 
+ 
+    def create_session_data(self, exercise_filename, 
+            video_filename, learning_list):
+        '''
+            Interweave exercise and video activity into condense
+            session data 
+            generate a condense array for each row of data
+            does not use readlines so there's less strain on memory
+            it would be great helpful to parallelize this function but
+            not sure how to efficiently do this and maintain the sort order 
+        '''
+        print('initialize '+ exercise_filename)
+        counter = 1
+        exercise_reader = open(exercise_filename,'r')
+        self.read_video_data(video_filename)
+        for line in exercise_reader:
+            row = line.split(",")
+            if self.check_in_learning_list(row, learning_list):
+                self.append_condense_data(row)
+            counter+=1
+            if counter % 1000000 == 0:
+                print(counter)
+        self.delete_header()
+        print('generated number of sessions: %s' % str(len(self.session_data)))
+    
+  
+    def read_video_data(self, video_filename):
+        '''
+           Create dictionary of videos watched for each session
+            in this format: 
+            { sha_id|session_start_time: [(timestamp, video), (timestamp, video),
+            ...]}
+        '''
         self.video_data = {}
         with open(video_filename, 'r') as video_reader:
             for line in video_reader:
@@ -163,90 +187,72 @@ class CondenseLearningData():
                 else:
                     self.video_data[session].append((start_time, video_id))
                  
-
-    # [TODO] CREATE SESSION DATA 
-    def create_session_data(self):
+    def check_in_learning_list(self, row, learning_list):
+        session_id = create_session_id(row[0], row[2])
+        is_learner = session_id in learning_list
+        return is_learner
+    
+    def append_condense_data(self, row):    
         '''
-            generate a token for each row of data
-            does not use readlines so there's less strain on memory
-            it would be great helpful to parallelize this function but
-            not sure how to efficiently do this and maintain the sort order 
+           Parse line from exercise, trnasform into condensed data
+           and then append to session_data and session_index.
         '''
-        counter = 1
-        for line in self.reader:
-            row = line.split(",")
-            # [TODO] VIDEO! CHECK TO SEE IF THERE'S ANY RELEVANT VIDEOS BEFORE
-            # [TODO] HINT! CHECK TO SEE IF THERE SHOULD BE ANY HINT STORED
-            # AFTER EXERCISE ATTEMPT
-            self.append_data(row)
-            counter+=1
-            if counter % 1000000 == 0:
-                print(counter)
-        self.delete_header()
-        print('generated lines of token: '+ str(len(self.session_data)))
-        
-    def delete_header(self):
-        self.session_data = self.session_data[2:]
-        self.session_index = self.session_index[2:]
-        
-    def append_data(self, row):
-        row_index = self.create_index(row)
-        condensed_exercise = self.create_condense_exercise(row)
-        session = create_session_id(row[0], row[2])
+        session_id = create_session_id(row[0], row[2])
         start_time = row[3]
-        hints = row[10]
-        # [TODO] ADD THE VIDEOS! WATCHED BEFORE EXERCISE
-        videos_watched_before = self.list_videos_watched_before(
-                session = session, 
-                exercise_start_time = start_time)
-         
-        if row_index == self.session_index[-1][0]:
-            '''if the session matches the last session store
-            append new row token to the last array in tokenize data'''
-            for condensed_video in videos_watched_before:
-                self.session_data[-1].append(condensed_video)
-            self.session_data[-1].append(condensed_exercise)
-        elif row_index != self.session_index[-1]:
-            '''
-            If the index does not match, then store as new session
-            '''
-            self.session_index.append([row_index])
-            self.session_data.append([row_token])
-        # [TODO] TRANSFORM THE NUMBER OF HINTS! TAKEN TO CONDENSE
-   
-    def create_index(self, row):
-        '''
-            the index for each entry is based on individual sessions 
-            and unique id for session combines sha_id and session_start_time
-            create a tuple with these two values 
-        '''
-        session_index = (row[0], row[2])
-        return(session_index)
-
-    def create_condense_exercise(self, row):
-        '''
-            create a token for learner entry
-            concatenates the exercise, problem type, and correctness value
-        '''
         exercise = row[5]
         problem_type = row[7].replace(' ','')
         content_name = exercise+'|'+ problem_type
         response = row[8]
+        hints = int(row[10])
+        condensed_exercise = self.create_condense_exercise(content_name, response)
+        self.append_data(condensed_exercise, session_id, start_time, hints)
+ 
+    def create_condense_exercise(self, content_name, response):
+        '''
+            Create a token for learner entry
+            concatenates the exercise, problem type, and correctness value
+        '''
         return(('exercise',content_name, response))
 
+       
+    def append_data(self, condensed_exercise,  session_id, start_time, hints):
+        '''
+           Append all relevant video, exercise and hints as condensed
+           data in the session data
+        '''
+        videos_watched_before = self.list_videos_watched_before(
+                session = session_id, 
+                exercise_start_time = start_time)
+        if session_id == self.session_index[-1][0]:
+            '''
+            If the session matches the last session store
+            append new row token to the last array in tokenize data
+            '''
+            for condensed_video in videos_watched_before:
+                self.session_data[-1].append(condensed_video)
+            self.session_data[-1].append(condensed_exercise)
+        elif session_id != self.session_index[-1]:
+            '''
+            If the index does not match, then store as new session
+            '''
+            self.session_index.append([session_id])
+            self.session_data.append([condensed_exercise])
+        if hints > 0:
+            self.create_hints_data(condensed_exercise, hints)
+   
     def list_videos_watched_before(self, session, exercise_start_time):
         '''
            Create a list of videos watched before exercise start time
+           condensed video data has the format ('video', video_id)
         '''
         videos_watched_before = []
-        #[TODO] CREATE LIST OF VIDEOS!  WATCHED BEFORE EXERCISE
         if session in self.video_data: 
             # if session in video watch list, extract list
             # iterate for each video
             session_videos = self.video_data[session]
             for i, video_instance in enumerate(session_videos):
                 video_timestamp = video_instance[0]
-                if video_instance < exercise_start_time:
+                if video_timestamp < exercise_start_time:
                     # if occurred before exercise, then create condense
                     # video data and delete, otherwise
                     video_id = video_instance[1]
@@ -257,19 +263,45 @@ class CondenseLearningData():
                     break
         return videos_watched_before 
 
-    # [TODO] ADD FUNCTION TO SUMMARIZE THE HINTS TAKEN DATA 
+    def create_hints_data(self, condensed_exercise, hints):
+        '''
+           Add the hints taken for each exercise with individual tokens
+           condensed hint data has format: ('hints', content_name + hint_num, )
+        '''
+        for hint_num in range(hints):
+            hint_id = condensed_exercise[1] + '|' + str(hint_num+1)
+            self.session_data[-1].append(('hint', hint_id, ))
+
+    def delete_header(self):
+        self.session_data = self.session_data[1:]
+        self.session_index = self.session_index[1:]
+
+    def test_create_session_data(self):
+        '''
+            Test create_session_data behaves as expected
+        '''
+        learning_list = set(['learner1|2018-01-01'])
+        self.video_data = {'learner1|2018-01-01':[('2018-01-01 2:00','video1')]}
+        test_reader = [
+                'learner1,,2018-01-01,2018-01-01 1:00,,ex1,,type 1,true,,0',
+                'learner1,,2018-01-01,2018-01-01 3:00,,ex1,,type 2,false,,2',
+                'learner1,,2018-02-01,2018-02-01 2:00,,ex3,,type 3,true,,0']
+        counter = 1
+        for line in test_reader:
+            row = line.split(",")
+            if self.check_in_learning_list(row, learning_list):
+                self.append_condense_data(row)
+        self.delete_header()
+        assert self.session_index == [['learner1|2018-01-01']]
+        assert self.session_data == [[
+            ('exercise','ex1|type1','true'),('video','video1',),
+            ('exercise','ex1|type2','false'),
+            ('hint','ex1|type2|1',),('hint','ex1|type2|2',)
+            ]]
+        print('PASS TEST!')
+        
 
        
-def write_file(file_name, data_array):
-    '''write file. Estimated time: 1.5 sec for 1M rows'''
-    path = 'sorted_data/'+file_name+'.csv'
-    print(path)
-    open_file = open(path, "w")
-    with open_file:
-        csvwriter = csv.writer(open_file, delimiter = ' ')
-        csvwriter.writerows(data_array)
-
-# [TODO] bundle write vector code into util file
 def write_vector_file(path, file_name, vectors):
     path = os.path.expanduser(path+file_name+'.out')
     print(path)
@@ -310,27 +342,31 @@ def create_learning_list(affix):
 # [TODO] RENAME ALL FILES FROM TOKENIZE
 def generate_token_files(affix):
     '''
-        Read the file name given by the affix, assume file with khan_data_<affix> exists in
-        sorted_data directory. Generate tokenize data and the session index for each row.
+        Read the file name given by the affix, assume file with 
+        khan_data_<affix> exists in sorted_data directory. 
+        Generate tokenize data and the session index for each row.
         The tokens are represents unique exericse + problem_type + correctness. 
         Estimated time: 5 seconds for 1M row
     '''
     # create file names
     exercise_filename = os.path.expanduser(
         '~/sorted_data/khan_data_'+affix+'.csv')
-    # [TODO]: UPDATE VIDEO! FILENAME
     video_filename = os.path.expanduser(
         '~/sorted_data/khan_video_data_'+affix+'.csv')
+    # create_learning_list
     learning_list = read_set(path = '~/cahl_rnn_output/', 
             file_name = 'learning_list'  )
-    #write_data_filename = 'tokenize_data_'+affix
-    #write_index_filename = 'tokenize_index_'+affix
-    ## generate token data
-    condense_data = CondenseLearningData(exercise_filename, video_filename, learning_list)
-    #token.create_session_data()
-    ## write the index and dat files
-    #write_file(write_data_filename, token.session_data)
-    #write_file(write_index_filename, token.session_index)
+    ## generate condense data
+    condense_data = CondenseLearningData()
+    condense_data.create_session_data( exercise_filename, 
+            video_filename, learning_list)
+    ## write the index and data files
+    write_vector_file(path = '~/cahl_rnn_output/', 
+            file_name = 'condense_session_data', 
+            vectors = condense_data.session_data)
+    write_set(path = '~/cahl_rnn_output/', 
+            file_name = 'condense_session_index',
+            writing_set = condense_data.session_index)
     
 
 def main():
