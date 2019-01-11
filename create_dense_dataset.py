@@ -303,7 +303,7 @@ class CondenseLearningData():
 
        
 def write_vector_file(path, file_name, vectors):
-    full_path = os.path.expanduser(path+file_name+'.out')
+    full_path = os.path.expanduser(path+file_name)
     print(full_path)
     np.save(full_path, vectors)
 
@@ -361,16 +361,17 @@ def generate_token_files(affix):
     condense_data.create_session_data( exercise_filename, 
             video_filename, learning_list)
     ## write the index and data files
+    # [TODO] change file name after create test sample file
     write_vector_file(path = '~/cahl_rnn_output/', 
-            file_name = 'condense_session_data', 
+            file_name = 'condense_session_data_sample', 
             vectors = condense_data.session_data)
     write_set(path = '~/cahl_rnn_output/', 
-            file_name = 'condense_session_index',
+            file_name = 'condense_session_index_sample',
             writing_set = condense_data.session_index)
     
 
 def main():
-    affix = 'sorted'
+    affix = 'small'
     start = time.time() 
     generate_token_files(affix)
     end =time.time()
