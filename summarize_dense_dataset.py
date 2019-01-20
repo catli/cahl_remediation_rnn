@@ -10,9 +10,6 @@ def read_vector_file(path, file_name):
     condense_data =  np.load(full_path)
     return condense_data
 
-#condense_data = read_vector_file(path = '~/cahl_rnn_output/',
-#            file_name = 'condense_session_data')
-#pdb.set_trace()
 
 class SummarizeStuckness():
 
@@ -47,8 +44,7 @@ class SummarizeStuckness():
             content_type = attempt[0]
             if content_type == 'exercise':
                 self.add_to_user_attempts(attempt)
-            else:
-                self.add_to_stuck(attempt)
+            self.add_to_stuck(attempt)
         self.summarize_user_data() 
 
     def add_to_user_attempts(self, attempt):
@@ -67,15 +63,13 @@ class SummarizeStuckness():
             self.user_attempts[problem]['incorrect']+=1
         self.add_new_problem_for_user(attempt, problem)
  
-    
-    def add_new_problem_for_user(attempt, problem):
+    def add_new_problem_for_user(self, attempt, problem):
         '''
            summarize the problem 
         '''
         if self.user_attempts[problem]['correct']>=2 and problem in self.user_data['stuck']:
             self.user_data['unstuck'][problem]  = self.summarize_unstuck(problem)
             del self.user_data['stuck'][problem]  
-        self.add_to_stuck(attempt)
         if problem in self.user_data['unstuck'] or  \
             problem in  self.user_data['never_stuck']:
             pass 
@@ -92,11 +86,10 @@ class SummarizeStuckness():
         '''
         content_type = attempt[0]
         content_name = attempt[1]
-        if content_type == 'hint':
-            exercise_name = content_name.split('|')[0] 
         for stuck_item in self.user_data['stuck']:
             content_suffix = ''
             if content_type in ('hint','exercise'):  
+                exercise_name = content_name.split('|')[0] 
                 stuck_exercise = stuck_item.split('|')[0]
                 # whether the hint taken or problem practiced
                 # belong to the same exercise as the
@@ -126,9 +119,9 @@ class SummarizeStuckness():
         unstuck_state['remediation_hints_on_diff_exercise'] = sum(
                 [item == 'hint_diff_ex' for item in remediation_list]) 
         unstuck_state['remediation_problems_on_same_exercise'] = sum(
-                [item == 'problem_same_ex' for item in remediation_list]) 
+                [item == 'exercise_same_ex' for item in remediation_list]) 
         unstuck_state['remediation_problems_on_diff_exercise'] = sum(
-                [item == 'problem_diff_ex' for item in remediation_list]) 
+                [item == 'exercise_diff_ex' for item in remediation_list]) 
         return unstuck_state
 
     def summarize_user_data(self):
@@ -154,23 +147,23 @@ class SummarizeStuckness():
         unstuck_num_practice_diff_ex = 0
         for unstuck_item in self.user_data['unstuck']:
             unstuck_state = self.user_data['unstuck'][unstuck_item] 
-            any_video = max(unstuck_state['remediation_videos']) 
-            any_hint = max(unstuck_state['remediation_hints_on_same_exercise'] + 
-                    unstuck_state['remediation_hints_on_diff_exercise'])
-            any_practice = max(unstuck_state['remediation_problems_on_same_exercise'] + 
-                    unstuck_state['remediation_problems_on_diff_exercise'])
+            any_video = int(unstuck_state['remediation_videos'] > 0 )
+            any_hint = int( (unstuck_state['remediation_hints_on_same_exercise'] + 
+                    unstuck_state['remediation_hints_on_diff_exercise'])>0)
+            any_practice = int( (unstuck_state['remediation_problems_on_same_exercise'] + 
+                    unstuck_state['remediation_problems_on_diff_exercise']) > 0 )
             unstuck_num_contents += unstuck_state['remediation_contents']  
             unstuck_num_videos += unstuck_state['remediation_videos'] 
             unstuck_num_hints_same_ex += unstuck_state['remediation_hints_on_same_exercise']
             unstuck_num_hints_diff_ex += unstuck_state['remediation_hints_on_diff_exercise']
             unstuck_num_practice_same_ex += unstuck_state['remediation_problems_on_same_exercise']
             unstuck_num_practice_diff_ex += unstuck_state['remediation_problems_on_diff_exercise']
-            unstuck_problems_with_videos += any_video
-            unstuck_problems_with_hints += any_hint
+            unstuck_problems_with_videos +=  any_video
+            unstuck_problems_with_hints +=  any_hint
             unstuck_problems_with_practice += any_practice
-            unstuck_problems_with_video_only += (any_video and (any_hint+any_practice)==0)
-            unstuck_problems_with_hint_only = (any_hint and (any_video+any_practice)==0)
-            unstuck_problems_with_practice_only = (any_practice and (any_video+any_hint)==0)
+            unstuck_problems_with_video_only += int(any_video and (any_hint+any_practice)==0)
+            unstuck_problems_with_hint_only = int(any_hint and (any_video+any_practice)==0)
+            unstuck_problems_with_practice_only = int(any_practice and (any_video+any_hint)==0)
         self.csvwriter.writerow([ 
             never_stuck_problems, 
             never_unstuck_problems,
